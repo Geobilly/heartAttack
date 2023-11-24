@@ -1,10 +1,9 @@
 from flask import Flask, request, jsonify
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split  # Make sure this import is present
+from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
-
 
 app = Flask(__name__)
 
@@ -32,8 +31,18 @@ lr.fit(X_train_scaled, y_train)
 def predict():
     try:
         data = request.json['data']
-        new_data = np.array(data).reshape(1, -1)
-        new_data_scaled = scaler.transform(new_data)
+
+        # Ensure that the new data has the same columns as the training data
+        new_data = pd.DataFrame([data], columns=X.columns)
+
+        # Use the same columns as during training
+        new_data = new_data[X.columns]
+
+        # Convert to NumPy array and reshape
+        new_data_array = new_data.to_numpy().reshape(1, -1)
+
+        # Scale the new data
+        new_data_scaled = scaler.transform(new_data_array)
 
         # Predict probabilities for the new data
         proba_new_data = lr.predict_proba(new_data_scaled)[:, 1] * 100
